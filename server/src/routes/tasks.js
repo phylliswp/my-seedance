@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import * as ark from '../services/ark.js';
 import * as laozhang from '../services/laozhang.js';
+import * as taskStore from '../services/taskStore.js';
 
 export const taskRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 30 * 1024 * 1024 } });
@@ -21,8 +22,7 @@ const MODELS = [
   { id: 'veo-3.1-fast', name: 'Veo 3.1 Fast', desc: '快速视频生成', provider: 'laozhang' },
 ];
 
-// 内存任务存储：taskId → { provider, model, prompt, createdAt }
-const taskStore = new Map();
+// 任务存储：taskId → { provider, model, prompt, createdAt }（持久化到 tasks.json）
 
 function getModelProvider(modelId) {
   const m = MODELS.find((m) => m.id === modelId);
@@ -141,17 +141,21 @@ taskRouter.get('/', async (req, res) => {
       status,
     });
 
-    // Gather laozhang tasks from taskStore
-    const laozhangTasks = [];
-    for (const [taskId, info] of taskStore) {
-      if (info.provider !== 'laozhang') continue;
+    // Gather tasks from taskStore (both ark and laozhang)
+    const storedTasks = [];
+    for (const [taskId, info] of taskStore.entries()) {
       try {
-        const task = await laozhang.getTask(taskId, info.model);
+        let task;
+        if (info.provider === 'laozhang') {
+          task = await laozhang.getTask(taskId, info.model);
+        } else {
+          task = await ark.getTask(taskId);
+        }
         task._prompt = info.prompt;
-        laozhangTasks.push(task);
+        storedTasks.push(task);
       } catch {
         // Task may have expired or be inaccessible
-        laozhangTasks.push({
+        storedTasks.push({
           id: taskId,
           model: info.model,
           status: 'failed',
@@ -162,9 +166,11 @@ taskRouter.get('/', async (req, res) => {
       }
     }
 
-    // Merge: Ark returns { data: [...] } structure, append laozhang tasks
+    // Merge: Ark list + stored tasks (deduplicate by id)
     const arkTasks = Array.isArray(arkResult) ? arkResult : (arkResult?.data || []);
-    const allTasks = [...arkTasks, ...laozhangTasks];
+    const arkTaskIds = new Set(arkTasks.map((t) => t.id));
+    const uniqueStoredTasks = storedTasks.filter((t) => !arkTaskIds.has(t.id));
+    const allTasks = [...arkTasks, ...uniqueStoredTasks];
     allTasks.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
     res.json(allTasks);

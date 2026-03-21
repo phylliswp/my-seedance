@@ -3,3 +3,4 @@ node_modules/
 server/.env
 dist/
 client/dist/
+server/tasks.json
