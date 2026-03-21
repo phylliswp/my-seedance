@@ -2,6 +2,7 @@ export interface Model {
   id: string;
   name: string;
   desc: string;
+  provider: 'ark' | 'laozhang';
 }
 
 export interface TaskContent {

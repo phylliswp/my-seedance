@@ -1,5 +1,8 @@
 {
   "name": "seedance-server",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "form-data": "^4.0.5"
+  }
 }

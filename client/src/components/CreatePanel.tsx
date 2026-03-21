@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Model } from '../types';
 import { fetchModels, createTask } from '../api';
+
+type Provider = 'ark' | 'laozhang';
 
 interface Props {
   onCreated: () => void;
@@ -8,6 +10,7 @@ interface Props {
 
 export function CreatePanel({ onCreated }: Props) {
   const [models, setModels] = useState<Model[]>([]);
+  const [provider, setProvider] = useState<Provider>('ark');
   const [model, setModel] = useState('doubao-seedance-2-0-260128');
   const [prompt, setPrompt] = useState('');
   const [ratio, setRatio] = useState('16:9');
@@ -25,6 +28,29 @@ export function CreatePanel({ onCreated }: Props) {
   useEffect(() => {
     fetchModels().then(setModels).catch(() => {});
   }, []);
+
+  // Filter models by current provider
+  const filteredModels = useMemo(
+    () => models.filter((m) => m.provider === provider),
+    [models, provider],
+  );
+
+  // Switch provider → auto-select first model of that provider
+  const handleProviderChange = useCallback(
+    (p: Provider) => {
+      setProvider(p);
+      const firstModel = models.find((m) => m.provider === p);
+      if (firstModel) setModel(firstModel.id);
+      // Reset provider-specific params
+      setRatio('16:9');
+      setDuration(5);
+      setResolution('1080p');
+      setSeed('-1');
+      setCameraFixed(false);
+      setReturnLastFrame(false);
+    },
+    [models],
+  );
 
   const handleImage = useCallback((file: File | undefined) => {
     if (!file) return;
@@ -61,6 +87,22 @@ export function CreatePanel({ onCreated }: Props) {
   return (
     <div className="card">
       <h2>🎬 创建视频生成任务</h2>
+
+      {/* Provider Tabs */}
+      <div className="provider-tabs" style={{ marginBottom: 20 }}>
+        <button
+          className={`provider-tab ${provider === 'ark' ? 'active' : ''}`}
+          onClick={() => handleProviderChange('ark')}
+        >
+          🌋 Seedance（火山引擎）
+        </button>
+        <button
+          className={`provider-tab ${provider === 'laozhang' ? 'active' : ''}`}
+          onClick={() => handleProviderChange('laozhang')}
+        >
+          ⚡ laozhang.ai
+        </button>
+      </div>
 
       {/* Prompt */}
       <div className="form-group full" style={{ marginBottom: 16 }}>
@@ -99,13 +141,14 @@ export function CreatePanel({ onCreated }: Props) {
 
       {/* Parameters */}
       <div className="form-grid">
+        {/* Model selector — always shown */}
         <div className="form-group">
           <label>模型</label>
           <select value={model} onChange={(e) => setModel(e.target.value)}>
-            {models.map((m) => (
+            {filteredModels.map((m) => (
               <option key={m.id} value={m.id}>{m.name} — {m.desc}</option>
             ))}
-            {models.length === 0 && <option value={model}>Seedance 2.0</option>}
+            {filteredModels.length === 0 && <option value={model}>加载中...</option>}
           </select>
         </div>
 
@@ -131,6 +174,7 @@ export function CreatePanel({ onCreated }: Props) {
             <option value={10}>10 秒</option>
             <option value={12}>12 秒</option>
             <option value={15}>15 秒</option>
+            <option value={20}>20 秒</option>
           </select>
         </div>
 

@@ -333,3 +333,33 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Provider Tabs ── */
+.provider-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.provider-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.provider-tab:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.provider-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
