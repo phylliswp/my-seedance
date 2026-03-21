@@ -1,0 +1,5 @@
+{
+  "name": "seedance-server",
+  "private": true,
+  "type": "module"
+}
