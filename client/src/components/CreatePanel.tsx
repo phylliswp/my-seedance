@@ -11,7 +11,7 @@ interface Props {
 export function CreatePanel({ onCreated }: Props) {
   const [models, setModels] = useState<Model[]>([]);
   const [provider, setProvider] = useState<Provider>('ark');
-  const [model, setModel] = useState('doubao-seedance-2-0-260128');
+  const [model, setModel] = useState('doubao-seedance-1-0-pro-fast-251015');
   const [prompt, setPrompt] = useState('');
   const [ratio, setRatio] = useState('16:9');
   const [duration, setDuration] = useState(5);
@@ -19,6 +19,8 @@ export function CreatePanel({ onCreated }: Props) {
   const [seed, setSeed] = useState('-1');
   const [cameraFixed, setCameraFixed] = useState(false);
   const [returnLastFrame, setReturnLastFrame] = useState(false);
+  const [serviceTier, setServiceTier] = useState<'default' | 'flex'>('flex');
+  const [generateAudio, setGenerateAudio] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,8 @@ export function CreatePanel({ onCreated }: Props) {
       setSeed('-1');
       setCameraFixed(false);
       setReturnLastFrame(false);
+      setServiceTier('flex');
+      setGenerateAudio(false);
     },
     [models],
   );
@@ -73,7 +77,7 @@ export function CreatePanel({ onCreated }: Props) {
     setLoading(true);
     setError('');
     try {
-      await createTask({ prompt, model, ratio, duration, resolution, seed, cameraFixed, returnLastFrame, image });
+      await createTask({ prompt, model, ratio, duration, resolution, seed, cameraFixed, returnLastFrame, serviceTier, generateAudio, image });
       setPrompt('');
       removeImage();
       onCreated();
@@ -192,16 +196,33 @@ export function CreatePanel({ onCreated }: Props) {
           <input type="text" value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="-1 表示随机" />
         </div>
 
-        <div className="form-group" style={{ justifyContent: 'flex-end', gap: 12 }}>
-          <div className="checkbox-row">
-            <input type="checkbox" checked={cameraFixed} onChange={(e) => setCameraFixed(e.target.checked)} id="cam" />
-            <label htmlFor="cam" style={{ color: 'var(--text)' }}>锁定镜头</label>
+          {/* service_tier — Seedance only */}
+          {provider === 'ark' && (
+            <div className="form-group">
+              <label>推理模式</label>
+              <select value={serviceTier} onChange={(e) => setServiceTier(e.target.value as 'default' | 'flex')}>
+                <option value="flex">Flex（离线，价格 ×0.5）</option>
+                <option value="default">Default（在线，低延迟）</option>
+              </select>
+            </div>
+          )}
+
+          <div className="form-group" style={{ justifyContent: 'flex-end', gap: 12 }}>
+            <div className="checkbox-row">
+              <input type="checkbox" checked={cameraFixed} onChange={(e) => setCameraFixed(e.target.checked)} id="cam" />
+              <label htmlFor="cam" style={{ color: 'var(--text)' }}>锁定镜头</label>
+            </div>
+            <div className="checkbox-row">
+              <input type="checkbox" checked={returnLastFrame} onChange={(e) => setReturnLastFrame(e.target.checked)} id="lf" />
+              <label htmlFor="lf" style={{ color: 'var(--text)' }}>返回末帧</label>
+            </div>
+            {model === 'doubao-seedance-1-5-pro-251215' && (
+              <div className="checkbox-row">
+                <input type="checkbox" checked={generateAudio} onChange={(e) => setGenerateAudio(e.target.checked)} id="ga" />
+                <label htmlFor="ga" style={{ color: 'var(--text)' }}>生成音频（1.5 Pro）</label>
+              </div>
+            )}
           </div>
-          <div className="checkbox-row">
-            <input type="checkbox" checked={returnLastFrame} onChange={(e) => setReturnLastFrame(e.target.checked)} id="lf" />
-            <label htmlFor="lf" style={{ color: 'var(--text)' }}>返回末帧</label>
-          </div>
-        </div>
       </div>
 
       {/* Submit */}

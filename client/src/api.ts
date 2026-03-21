@@ -18,6 +18,8 @@ export async function createTask(params: CreateTaskParams): Promise<Task> {
   form.append('seed', params.seed);
   form.append('cameraFixed', String(params.cameraFixed));
   form.append('returnLastFrame', String(params.returnLastFrame));
+  form.append('serviceTier', params.serviceTier);
+  form.append('generateAudio', String(params.generateAudio));
   if (params.image) {
     form.append('image', params.image);
   }

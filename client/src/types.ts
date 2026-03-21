@@ -31,5 +31,7 @@ export interface CreateTaskParams {
   seed: string;
   cameraFixed: boolean;
   returnLastFrame: boolean;
+  serviceTier: 'default' | 'flex';
+  generateAudio: boolean;
   image?: File | null;
 }

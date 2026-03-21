@@ -37,8 +37,8 @@ taskRouter.get('/models', (_req, res) => {
 /** POST /api/tasks — 创建视频任务 */
 taskRouter.post('/', upload.single('image'), async (req, res) => {
   try {
-    const { prompt, model, ratio, duration, resolution, seed, cameraFixed, returnLastFrame } = req.body;
-    const selectedModel = model || 'doubao-seedance-2-0-260128';
+    const { prompt, model, ratio, duration, resolution, seed, cameraFixed, returnLastFrame, serviceTier, generateAudio } = req.body;
+    const selectedModel = model || 'doubao-seedance-1-0-pro-fast-251015';
     const provider = getModelProvider(selectedModel);
 
     if (!prompt?.trim() && !req.file) {
@@ -81,6 +81,10 @@ taskRouter.post('/', upload.single('image'), async (req, res) => {
       if (seed && seed !== '-1') body.seed = Number(seed);
       if (cameraFixed === 'true') body.camera_fixed = true;
       if (returnLastFrame === 'true') body.return_last_frame = true;
+      body.service_tier = (serviceTier === 'default') ? 'default' : 'flex';
+      if (selectedModel === 'doubao-seedance-1-5-pro-251215') {
+        body.generate_audio = generateAudio === 'true';
+      }
 
       result = await ark.createTask(body);
     }

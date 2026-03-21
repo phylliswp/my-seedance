@@ -1,9 +1,6 @@
 const ARK_BASE = 'https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks';
 
 function getHeaders() {
-
-  console.log(' process.env', process.env)
-
   const apiKey = process.env.ARK_API_KEY;
   if (!apiKey) throw new Error('ARK_API_KEY is not configured');
   return {
