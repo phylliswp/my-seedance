@@ -104,6 +104,31 @@ taskRouter.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
+/** DELETE /api/tasks/:id — 取消或删除任务 */
+taskRouter.delete('/:id', async (req, res) => {
+  try {
+    const taskId = req.params.id;
+    const stored = taskStore.get(taskId);
+    const provider = stored?.provider || 'ark';
+
+    let result;
+    if (provider === 'laozhang') {
+      // 模拟成功删除
+      result = { id: taskId, deleted: true, status: 'cancelled' };
+    } else {
+      result = await ark.deleteTask(taskId);
+    }
+
+    // 根据业务规则：如果是物理删除成功，或者取消成功且不再需要列表中维护，可以将其清除
+    // 先保证本地存储同步丢弃以完成客户端的逻辑表现
+    taskStore.remove(taskId);
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /** GET /api/tasks/:id — 查询任务状态 */
 taskRouter.get('/:id', async (req, res) => {
   try {

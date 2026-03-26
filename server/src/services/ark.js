@@ -35,6 +35,19 @@ export async function getTask(taskId) {
   return res.json();
 }
 
+/** 删除任务 */
+export async function deleteTask(taskId) {
+  const res = await fetch(`${ARK_BASE}/${encodeURIComponent(taskId)}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
 /** 获取任务列表 */
 export async function listTasks({ pageNum = 1, pageSize = 20, status } = {}) {
   const params = new URLSearchParams({

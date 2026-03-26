@@ -29,6 +29,11 @@ export function set(taskId, info) {
   saveToFile();
 }
 
+export function remove(taskId) {
+  delete cache[taskId];
+  saveToFile();
+}
+
 export function entries() {
   return Object.entries(cache);
 }

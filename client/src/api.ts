@@ -36,6 +36,13 @@ export async function fetchTask(taskId: string): Promise<Task> {
   return res.json();
 }
 
+export async function deleteTask(taskId: string): Promise<any> {
+  const res = await fetch(`${BASE}/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to delete task');
+  return data;
+}
+
 export async function fetchTasks(): Promise<Task[]> {
   const res = await fetch(BASE);
   if (!res.ok) throw new Error('Failed to fetch tasks');

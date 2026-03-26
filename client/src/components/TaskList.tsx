@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Task } from '../types';
-import { fetchTask, fetchTasks } from '../api';
+import { fetchTask, fetchTasks, deleteTask } from '../api';
 
 const STATUS_LABEL: Record<string, string> = {
   queued: '排队中',
@@ -76,6 +76,19 @@ export function TaskList() {
     }
   };
 
+  const handleDelete = async (taskId: string, status: string) => {
+    const actionName = status === 'queued' ? '取消该任务' : '删除该记录';
+    if (!window.confirm(`确认${actionName}吗？此操作不可恢复。`)) return;
+    
+    try {
+      await deleteTask(taskId);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      if (expandedId === taskId) setExpandedId(null);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : '操作失败');
+    }
+  };
+
   if (loading) {
     return (
       <div className="card">
@@ -121,6 +134,15 @@ export function TaskList() {
               <button className="btn btn-secondary" style={{ padding: '4px 12px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); handleRefresh(task.id); }}>
                 刷新
               </button>
+              {['queued', 'succeeded', 'failed', 'expired'].includes(task.status) && (
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ padding: '4px 12px', fontSize: 12, marginLeft: '8px', color: '#e55', borderColor: '#e55' }} 
+                  onClick={(e) => { e.stopPropagation(); handleDelete(task.id, task.status); }}
+                >
+                  {task.status === 'queued' ? '取消' : '删除'}
+                </button>
+              )}
             </div>
 
             {expandedId === task.id && (
